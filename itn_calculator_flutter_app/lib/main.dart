@@ -1,6 +1,12 @@
-import 'package:english_words/english_words.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+
+const List<Widget> icons = <Widget>[
+  Icon(Icons.person),
+  Icon(Icons.group),
+];
 
 void main() {
   runApp(MyApp());
@@ -14,7 +20,7 @@ class MyApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (context) => MyAppState(),
       child: MaterialApp(
-        title: 'Namer App',
+        title: 'ITN Calculator',
         theme: ThemeData(
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
@@ -26,22 +32,15 @@ class MyApp extends StatelessWidget {
 }
 
 class MyAppState extends ChangeNotifier {
-  var current = WordPair.random();
+  var itnUser = 0.0;
+  var itnPartner = 0.0;
+  var itnOpponent1 = 0.0;
+  var itnOpponent2 = 0.0;
 
-  void getNext() {
-    current = WordPair.random();
-    notifyListeners();
-  }
+  final List<bool> selectedMode = <bool>[true, false];
 
-  var favorites = <WordPair>[];
-
-  void toggleFavorite() {
-    if (favorites.contains(current)) {
-      favorites.remove(current);
-    } else {
-      favorites.add(current);
-    }
-    notifyListeners();
+  double calculateItnChange() {
+    return 0.0;
   }
 }
 
@@ -58,10 +57,10 @@ class _MyHomePageState extends State<MyHomePage> {
     Widget page;
     switch (selectedIndex) {
       case 0:
-        page = GeneratorPage();
+        page = HomePage();
         break;
       case 1:
-        page = FavoritesPage();
+        page = ITNCalculatorPage();
         break;
       default:
         throw UnimplementedError('no widget for $selectedIndex');
@@ -81,8 +80,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       label: Text('Home'),
                     ),
                     NavigationRailDestination(
-                      icon: Icon(Icons.favorite),
-                      label: Text('Favorites'),
+                      icon: Icon(Icons.calculate_rounded),
+                      label: Text('ITN Calculator'),
                     ),
                   ],
                   selectedIndex: selectedIndex,
@@ -108,42 +107,26 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 
-class GeneratorPage extends StatelessWidget {
+class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
-    var pair = appState.current;
-
-    IconData icon;
-    if (appState.favorites.contains(pair)) {
-      icon = Icons.favorite;
-    } else {
-      icon = Icons.favorite_border;
-    }
-
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          BigCard(pair: pair),
+          Text(
+            "Welcome to ITN Calculator",
+            style: GoogleFonts.robotoCondensed(
+              textStyle: TextStyle(
+                color: Colors.black,
+                fontSize: 22.0
+              ) 
+            ),
+          ),
           SizedBox(height: 10),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              ElevatedButton.icon(
-                onPressed: () {
-                  appState.toggleFavorite();
-                },
-                icon: Icon(icon),
-                label: Text('Like'),
-              ),
-              SizedBox(width: 10),
-              ElevatedButton(
-                onPressed: () {
-                  appState.getNext();
-                },
-                child: Text('Next'),
-              ),
             ],
           ),
         ],
@@ -152,34 +135,109 @@ class GeneratorPage extends StatelessWidget {
   }
 }
 
-class FavoritesPage extends StatelessWidget {
+class ITNCalculatorPage extends StatefulWidget {
+  @override
+  State<ITNCalculatorPage> createState() => _ITNCalculatorPageState();
+}
+
+class _ITNCalculatorPageState extends State<ITNCalculatorPage> {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
 
-    if (appState.favorites.isEmpty) {
-      return Center(
-        child: Text('No favorites yet.'),
-      );
-    }
-
-    return ListView(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(20),
-          child: Text('You have '
-              '${appState.favorites.length} favorites:'),
-        ),
-        for (var pair in appState.favorites)
-          ListTile(
-            leading: Icon(Icons.favorite),
-            title: Text(pair.asLowerCase),
+    return Center(
+      child: Column(
+        children: [
+          SizedBox(height: 25),
+          Text(
+            "ITN Calculator",
+            style: GoogleFonts.robotoCondensed(
+              textStyle: TextStyle(
+                color: Colors.black,
+                fontSize: 22.0
+              ) 
+            ),
           ),
-      ],
+          SizedBox(height: 25),
+          ToggleButtons(
+            direction: Axis.horizontal,
+            onPressed: (int index) {
+              setState(() {
+                // The button that is tapped is set to true, and the others to false.
+                for (int i = 0; i < appState.selectedMode.length; i++) {
+                  appState.selectedMode[i] = i == index;
+                }
+              });
+            },
+            borderRadius: const BorderRadius.all(Radius.circular(8)),
+            selectedBorderColor: Theme.of(context).colorScheme.secondary,
+            selectedColor: Colors.white,
+            fillColor: Theme.of(context).colorScheme.onPrimaryContainer,
+            color: Theme.of(context).colorScheme.secondary,
+            isSelected: appState.selectedMode,
+            children: icons,
+          ),
+          SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(50, 0, 50, 0),
+            child: getITNTextFormField(appState, 'Your ITN'),
+          ),
+          if (appState.selectedMode[1]) ...[
+            SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(50, 0, 50, 0),
+              child: getITNTextFormField(appState, 'ITN of your partner', )
+            )
+          ],
+          SizedBox(height: 20),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(50, 0, 50, 0),
+            child: getITNTextFormField(appState, 'ITN of your opponent')
+          ),
+          if (appState.selectedMode[1]) ...[
+            SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(50, 0, 50, 0),
+              child: getITNTextFormField(appState, 'ITN of your opponent', )
+            )
+          ],
+          SizedBox(height: 20),
+          OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.secondary,
+              side: BorderSide(
+                color: Theme.of(context).colorScheme.secondary,
+              ),
+            ),
+            onPressed:() {},
+            child: Text('Calculate'),
+          )
+        ],
+      ),
     );
+  }
+
+  TextFormField getITNTextFormField(MyAppState appState, String label) {
+    return TextFormField(
+            decoration: InputDecoration(
+              border: const UnderlineInputBorder(),
+              labelText: label,
+            ),
+            keyboardType: TextInputType.number,
+            inputFormatters: <TextInputFormatter>[
+              FilteringTextInputFormatter.digitsOnly
+            ],
+            onChanged: (value) {
+              setState(() {
+                // TODO
+                appState.itnUser = double.tryParse(value) ?? 0;
+              });
+            },
+          );
   }
 }
 
+/*
 class BigCard extends StatelessWidget {
   const BigCard({
     super.key,
@@ -207,4 +265,4 @@ class BigCard extends StatelessWidget {
       ),
     );
   }
-}
+}*/
