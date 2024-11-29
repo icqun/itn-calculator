@@ -10,8 +10,8 @@ const List<Widget> modeIcons = <Widget>[
 ];
 
 const List<Widget> successIcons = <Widget>[
-  Icon(Icons.check, color: Colors.green, size: 30),
-  Icon(Icons.close, color: Colors.red, size: 30),
+  Icon(Icons.emoji_events, color: Color.fromARGB(255, 183, 156, 2), size: 30),
+  Icon(Icons.dangerous, color: Colors.red, size: 30),
 ];
 
 void main() {
@@ -274,10 +274,10 @@ class _ITNCalculatorPageState extends State<ITNCalculatorPage> {
                   : Colors.red
               ),
               appState.itnChangeOfUser.isNaN
-                ? ""
+                ? ''
                 : appState.selectedSuccess[0]
-                  ? '- ${appState.itnChangeOfUser.toStringAsFixed(3)}'
-                  : '+ ${appState.itnChangeOfUser.toStringAsFixed(3)}'
+                  ? '- ${appState.itnChangeOfUser.toStringAsFixed(3)} ⟶ ${(appState.itnUser - appState.itnChangeOfUser).toStringAsFixed(3)}'
+                  : '+ ${appState.itnChangeOfUser.toStringAsFixed(3)} ⟶ ${(appState.itnUser + appState.itnChangeOfUser).toStringAsFixed(3)}'
             )
           ],
         ),
@@ -285,6 +285,7 @@ class _ITNCalculatorPageState extends State<ITNCalculatorPage> {
     );
   }
 
+  /*
   Future<dynamic> showErrorDialog(BuildContext context) {
     return showDialog(
       context: context,
@@ -308,7 +309,7 @@ class _ITNCalculatorPageState extends State<ITNCalculatorPage> {
         ),
       )
     );
-  }
+  }*/
 
   TextFormField getITNTextFormField(MyAppState appState, String label, void Function(double) onChangedCallback) {
     return TextFormField(
