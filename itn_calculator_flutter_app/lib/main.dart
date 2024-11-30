@@ -115,7 +115,6 @@ class _MyHomePageState extends State<MyHomePage> {
         throw UnimplementedError('no widget for $selectedIndex');
     }
 
-    // TODO: reduce code duplication
     return LayoutBuilder(builder: (context, constraints) {
       return Scaffold(
         bottomNavigationBar: NavigationBar(

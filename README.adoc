@@ -1,2 +1,50 @@
 = itn-calculator
+:icons: font
+:experimental:
+:sectnums:
+:toc: left
+:source-highlighter: highlight.js
+ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+endif::[]
+:stem: asciimath
 
+== Description
+This app is a small I~nternational~T~ennis~N~umber~ calculator for tennis players in Austria. You can enter the ITNs of yourself, your comrades and your opponents and find out how much the ITN changes if you win or lose.
+
+== Calculations
+Source: https://www.oetv.at/breitensport/berechnung as of **2024/11/29**
+
+s … ÖTV ITN AUSTRIA of the winner before the game +
+v … ÖTV ITN AUSTRIA of the loser before the game
+
+Singles:
+
+[stem]
+++++
+x = v - s
+++++
+
+[stem]
+++++
+Delta = 0.250 / (1.000 + 2.595 * e^(3.500*x))
+++++
+
+Doubles:
+
+s … average ÖTV ITN AUSTRIA of the winner duo before the game +
+v … average ÖTV ITN AUSTRIA of the loser duo before the game
+
+[stem]
+++++
+x = v - s
+++++
+
+[stem]
+++++
+Delta = (0.250 / (1.000 + 2.595 * e^(3.500*x))) * 0.25
+++++
