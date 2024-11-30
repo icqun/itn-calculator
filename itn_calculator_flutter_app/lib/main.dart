@@ -1,8 +1,12 @@
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+
+const double minItn = 1.000;
+const double maxItn = 10.300;
 
 const List<Widget> modeIcons = <Widget>[
   Icon(Icons.person, size: 30),
@@ -47,11 +51,14 @@ class MyAppState extends ChangeNotifier {
   var itnChangeOfUser = double.nan;
 
   bool calculateItnChange(bool userWon) {
-    if (itnUser < 1.0 || itnUser > 10.3 || itnOpponent1 < 1.0 || itnOpponent1 > 10.3) {
+    if (itnUser < minItn ||
+        itnUser > maxItn ||
+        itnOpponent1 < minItn ||
+        itnOpponent1 > maxItn) {
       itnChangeOfUser = double.nan;
       return false;
     }
-    
+
     // Single mode calculation
     if (selectedMode[0]) {
       var x = userWon ? itnOpponent1 - itnUser : itnUser - itnOpponent1;
@@ -59,10 +66,13 @@ class MyAppState extends ChangeNotifier {
       notifyListeners();
       return true;
     }
-    
+
     // Double mode calculation
     else if (selectedMode[1]) {
-      if (itnPartner < 1.0 || itnPartner > 10.3 || itnOpponent2 < 1.0 || itnOpponent2 > 10.3) {
+      if (itnPartner < minItn ||
+          itnPartner > maxItn ||
+          itnOpponent2 < minItn ||
+          itnOpponent2 > maxItn) {
         itnChangeOfUser = double.nan;
         return false;
       }
@@ -70,7 +80,9 @@ class MyAppState extends ChangeNotifier {
       var userDoubleItn = (itnUser + itnPartner) / 2;
       var opponentDoubleItn = (itnOpponent1 + itnOpponent2) / 2;
 
-      var x = userWon ? opponentDoubleItn - userDoubleItn : userDoubleItn - opponentDoubleItn;
+      var x = userWon
+          ? opponentDoubleItn - userDoubleItn
+          : userDoubleItn - opponentDoubleItn;
       itnChangeOfUser = (0.250 / (1.000 + 2.595 * exp(3.500 * x))) * 0.25;
       notifyListeners();
       return true;
@@ -91,58 +103,58 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+
     Widget page;
     switch (selectedIndex) {
       case 0:
         page = WelcomeHomePage();
-        break;
       case 1:
         page = ITNCalculatorPage();
-        break;
       default:
         throw UnimplementedError('no widget for $selectedIndex');
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return Scaffold(
-          body: Row(
-            children: [
-              SafeArea(
-                child: NavigationRail(
-                  extended: constraints.maxWidth >= 600,
-                  destinations: [
-                    NavigationRailDestination(
-                      icon: Icon(Icons.home),
-                      label: Text('Home'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.calculate_rounded),
-                      label: Text('ITN Calculator'),
-                    ),
-                  ],
-                  selectedIndex: selectedIndex,
-                  onDestinationSelected: (value) {
-                    setState(() {
-                      selectedIndex = value;
-                    });
-                  },
-                ),
+    // TODO: reduce code duplication
+    return LayoutBuilder(builder: (context, constraints) {
+      return Scaffold(
+        bottomNavigationBar: NavigationBar(
+            onDestinationSelected: (int index) {
+              setState(() {
+                selectedIndex = index;
+                appState.calculateItnChange(appState.selectedSuccess[0]);
+              });
+            },
+            indicatorColor: Theme.of(context).colorScheme.inversePrimary,
+            selectedIndex: selectedIndex,
+            destinations: const <Widget>[
+              NavigationDestination(
+                selectedIcon: Icon(Icons.home),
+                icon: Icon(Icons.home_outlined),
+                label: 'Home',
               ),
-              Expanded(
-                child: Container(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  child: page,
-                ),
+              NavigationDestination(
+                selectedIcon: Icon(Icons.calculate_rounded),
+                icon: Icon(Icons.calculate_outlined),
+                label: 'ITN Calculator',
               ),
-            ],
-          ),
-        );
-      }
-    );
+            ]),
+        body: Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                  image: AssetImage('assets/home.jpg'), fit: BoxFit.cover),
+            ),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [page],
+              ),
+            )),
+      );
+    });
   }
 }
-
 
 class WelcomeHomePage extends StatelessWidget {
   @override
@@ -151,19 +163,20 @@ class WelcomeHomePage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            "Welcome to ITN Calculator",
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: 22.0
-            ),
-          ),
-          SizedBox(height: 10),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-            ],
-          ),
+          Padding(
+              padding: const EdgeInsets.fromLTRB(40, 0, 40, 0),
+              child: ColoredBox(
+                  color: Theme.of(context).cardColor.withOpacity(0.5),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Text(
+                      "Welcome to ITN Calculator",
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 30.0,
+                      ),
+                    ),
+                  )))
         ],
       ),
     );
@@ -181,137 +194,144 @@ class _ITNCalculatorPageState extends State<ITNCalculatorPage> {
     var appState = context.watch<MyAppState>();
 
     return Align(
-      alignment: Alignment.topCenter,
+      alignment: Alignment.center,
       child: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            SizedBox(height: 25),
-            Text(
-              "ITN Calculator",
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 22.0
-              ),
-            ),
-            SizedBox(height: 25),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ToggleButtons(
-                  direction: Axis.horizontal,
-                  onPressed: (int index) {
-                    setState(() {
-                      // The button that is tapped is set to true, and the others to false.
-                      for (int i = 0; i < appState.selectedMode.length; i++) {
-                        appState.selectedMode[i] = i == index;
-                      }
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(50, 0, 50, 0),
+          child: ColoredBox(
+              color: Theme.of(context).cardColor.withOpacity(0.5),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  SizedBox(height: 30),
+                  Text(
+                    "ITN Calculator",
+                    style: TextStyle(color: Colors.black, fontSize: 30.0),
+                  ),
+                  SizedBox(height: 25),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ToggleButtons(
+                        direction: Axis.horizontal,
+                        onPressed: (int index) {
+                          setState(() {
+                            // The button that is tapped is set to true, and the others to false.
+                            for (int i = 0;
+                                i < appState.selectedMode.length;
+                                i++) {
+                              appState.selectedMode[i] = i == index;
+                            }
 
-                      appState.calculateItnChange(appState.selectedSuccess[0]);
-                    });
-                  },
-                  borderRadius: const BorderRadius.all(Radius.circular(8)),
-                  selectedBorderColor: Theme.of(context).colorScheme.onPrimaryContainer,
-                  selectedColor: Colors.black,
-                  fillColor: Theme.of(context).colorScheme.inversePrimary,
-                  color: Theme.of(context).colorScheme.secondary,
-                  borderWidth: 2,
-                  isSelected: appState.selectedMode,
-                  children: modeIcons,
-                ),
-                SizedBox(width: 30),
-                ToggleButtons(
-                  direction: Axis.horizontal,
-                  onPressed: (int index) {
-                    setState(() {
-                      // The button that is tapped is set to true, and the others to false.
-                      for (int i = 0; i < appState.selectedSuccess.length; i++) {
-                        appState.selectedSuccess[i] = i == index;
-                      }
+                            appState.calculateItnChange(
+                                appState.selectedSuccess[0]);
+                          });
+                        },
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(8)),
+                        selectedBorderColor:
+                            Theme.of(context).colorScheme.onPrimaryContainer,
+                        selectedColor: Colors.black,
+                        fillColor: Theme.of(context).colorScheme.inversePrimary,
+                        color: Theme.of(context).colorScheme.secondary,
+                        borderWidth: 2,
+                        isSelected: appState.selectedMode,
+                        children: modeIcons,
+                      ),
+                      SizedBox(width: 60),
+                      ToggleButtons(
+                        direction: Axis.horizontal,
+                        onPressed: (int index) {
+                          setState(() {
+                            // The button that is tapped is set to true, and the others to false.
+                            for (int i = 0;
+                                i < appState.selectedSuccess.length;
+                                i++) {
+                              appState.selectedSuccess[i] = i == index;
+                            }
 
-                      appState.calculateItnChange(appState.selectedSuccess[0]);
-                    });
-                  },
-                  borderRadius: const BorderRadius.all(Radius.circular(8)),
-                  selectedBorderColor: Theme.of(context).colorScheme.onPrimaryContainer,
-                  fillColor: Theme.of(context).colorScheme.inversePrimary,
-                  borderWidth: 2,
-                  isSelected: appState.selectedSuccess,
-                  children: successIcons,
-                ),
-              ],
-            ),
-            SizedBox(height: 10),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(50, 0, 50, 0),
-              child: getITNTextFormField(appState, 'Your ITN', (value) => appState.itnUser = value),
-            ),
-            if (appState.selectedMode[1]) ...[
-              SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(50, 0, 50, 0),
-                child: getITNTextFormField(appState, 'ITN of your partner', (value) => appState.itnPartner = value)
-              )
-            ],
-            SizedBox(height: 20),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(50, 0, 50, 0),
-              child: getITNTextFormField(appState, 'ITN of your opponent', (value) => appState.itnOpponent1 = value)
-            ),
-            if (appState.selectedMode[1]) ...[
-              SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(50, 0, 50, 0),
-                child: getITNTextFormField(appState, 'ITN of your opponent', (value) => appState.itnOpponent2 = value)
-              )
-            ],
-            SizedBox(height: 20),
-            Text(
-              style: TextStyle(
-                fontSize: 50,
-                color: appState.selectedSuccess[0]
-                  ? Colors.green
-                  : Colors.red
-              ),
-              appState.itnChangeOfUser.isNaN
-                ? ''
-                : appState.selectedSuccess[0]
-                  ? '- ${appState.itnChangeOfUser.toStringAsFixed(3)} ⟶ ${(appState.itnUser - appState.itnChangeOfUser).toStringAsFixed(3)}'
-                  : '+ ${appState.itnChangeOfUser.toStringAsFixed(3)} ⟶ ${(appState.itnUser + appState.itnChangeOfUser).toStringAsFixed(3)}'
-            )
-          ],
+                            appState.calculateItnChange(
+                                appState.selectedSuccess[0]);
+                          });
+                        },
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(8)),
+                        selectedBorderColor:
+                            Theme.of(context).colorScheme.onPrimaryContainer,
+                        fillColor: Theme.of(context).colorScheme.inversePrimary,
+                        borderWidth: 2,
+                        isSelected: appState.selectedSuccess,
+                        children: successIcons,
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(50, 0, 50, 0),
+                    child: getITNTextFormField(
+                        appState,
+                        'Your ITN',
+                        appState.itnUser == 0
+                            ? ''
+                            : appState.itnUser.toStringAsFixed(3),
+                        (value) => appState.itnUser = value),
+                  ),
+                  if (appState.selectedMode[1]) ...[
+                    SizedBox(height: 20),
+                    Padding(
+                        padding: const EdgeInsets.fromLTRB(50, 0, 50, 0),
+                        child: getITNTextFormField(
+                            appState,
+                            'ITN of your partner',
+                            appState.itnPartner == 0
+                                ? ''
+                                : appState.itnPartner.toStringAsFixed(3),
+                            (value) => appState.itnPartner = value))
+                  ],
+                  SizedBox(height: 20),
+                  Padding(
+                      padding: const EdgeInsets.fromLTRB(50, 0, 50, 0),
+                      child: getITNTextFormField(
+                          appState,
+                          'ITN of your opponent',
+                          appState.itnOpponent1 == 0
+                              ? ''
+                              : appState.itnOpponent1.toStringAsFixed(3),
+                          (value) => appState.itnOpponent1 = value)),
+                  if (appState.selectedMode[1]) ...[
+                    SizedBox(height: 20),
+                    Padding(
+                        padding: const EdgeInsets.fromLTRB(50, 0, 50, 0),
+                        child: getITNTextFormField(
+                            appState,
+                            'ITN of your opponent',
+                            appState.itnOpponent2 == 0
+                                ? ''
+                                : appState.itnOpponent2.toStringAsFixed(3),
+                            (value) => appState.itnOpponent2 = value))
+                  ],
+                  SizedBox(height: 20),
+                  Text(
+                      style: TextStyle(
+                          fontSize: 40,
+                          color: appState.selectedSuccess[0]
+                              ? Colors.green
+                              : Colors.red),
+                      appState.itnChangeOfUser.isNaN
+                          ? ''
+                          : appState.selectedSuccess[0]
+                              ? '- ${appState.itnChangeOfUser.toStringAsFixed(3)} ⟶ ${(appState.itnUser - appState.itnChangeOfUser).toStringAsFixed(3)}'
+                              : '+ ${appState.itnChangeOfUser.toStringAsFixed(3)} ⟶ ${(appState.itnUser + appState.itnChangeOfUser).toStringAsFixed(3)}'),
+                  SizedBox(height: 20),
+                ],
+              )),
         ),
-      )
+      ),
     );
   }
 
-  /*
-  Future<dynamic> showErrorDialog(BuildContext context) {
-    return showDialog(
-      context: context,
-      builder: (BuildContext context) => Dialog(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              const Text('Please enter valid ITN\'s between 1.000 and 10.300'),
-              const SizedBox(height: 7),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('Close'),
-              ),
-            ],
-          ),
-        ),
-      )
-    );
-  }*/
-
-  TextFormField getITNTextFormField(MyAppState appState, String label, void Function(double) onChangedCallback) {
+  TextFormField getITNTextFormField(MyAppState appState, String label,
+      String initialValue, void Function(double) onChangedCallback) {
     return TextFormField(
       decoration: InputDecoration(
         border: const UnderlineInputBorder(),
@@ -320,12 +340,15 @@ class _ITNCalculatorPageState extends State<ITNCalculatorPage> {
       keyboardType: TextInputType.number,
       inputFormatters: [
         FilteringTextInputFormatter.allow(RegExp(r'(^\d*\.?\d*)')),
-        LengthLimitingTextInputFormatter(6)
+        LengthLimitingTextInputFormatter(6),
+        NumericalRangeFormatter(min: minItn, max: maxItn)
       ],
       autovalidateMode: AutovalidateMode.always,
       validator: (value) {
         double itn = double.tryParse(value ?? "") ?? 0;
-        return RegExp(r'^\d{0,2}(\.\d{3})?$').hasMatch(itn.toString()) || itn >= 1.000 && itn <= 10.300 ? null : 'Invalid value';
+        return itn >= minItn && itn <= maxItn || value == ''
+            ? null
+            : 'Invalid value';
       },
       onChanged: (value) {
         setState(() {
@@ -333,6 +356,30 @@ class _ITNCalculatorPageState extends State<ITNCalculatorPage> {
           appState.calculateItnChange(appState.selectedSuccess[0]);
         });
       },
+      initialValue: initialValue,
     );
+  }
+}
+
+class NumericalRangeFormatter extends TextInputFormatter {
+  final double min;
+  final double max;
+
+  NumericalRangeFormatter({required this.min, required this.max});
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (RegExp(r'^\d\.\d\d\d\d$').hasMatch(newValue.text)) {
+      return oldValue;
+    } else if (newValue.text == '') {
+      return newValue;
+    } else if (double.parse(newValue.text) < min) {
+      return TextEditingValue().copyWith(text: min.toStringAsFixed(2));
+    } else {
+      return double.parse(newValue.text) > max ? oldValue : newValue;
+    }
   }
 }
