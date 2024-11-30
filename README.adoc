@@ -24,6 +24,11 @@ v … ÖTV ITN AUSTRIA of the loser before the game
 
 Singles:
 
+ifdef::env-github[]
+image::img/itn-singles-formula.png[]
+endif::[]
+
+ifndef::env-github[]
 [stem]
 ++++
 x = v - s
@@ -33,12 +38,18 @@ x = v - s
 ++++
 Delta = 0.250 / (1.000 + 2.595 * e^(3.500*x))
 ++++
+endif::[]
 
 Doubles:
 
 s … average ÖTV ITN AUSTRIA of the winner duo before the game +
 v … average ÖTV ITN AUSTRIA of the loser duo before the game
 
+ifdef::env-github[]
+image::img/itn-doubles-formula.png[]
+endif::[]
+
+ifndef::env-github[]
 [stem]
 ++++
 x = v - s
@@ -48,3 +59,4 @@ x = v - s
 ++++
 Delta = (0.250 / (1.000 + 2.595 * e^(3.500*x))) * 0.25
 ++++
+endif::[]
