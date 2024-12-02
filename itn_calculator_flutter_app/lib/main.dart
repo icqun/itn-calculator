@@ -63,6 +63,14 @@ class MyAppState extends ChangeNotifier {
     if (selectedMode[0]) {
       var x = userWon ? itnOpponent1 - itnUser : itnUser - itnOpponent1;
       itnChangeOfUser = 0.250 / (1.000 + 2.595 * exp(3.500 * x));
+
+      // TODO: Simplify
+      if (!userWon && itnUser + itnChangeOfUser > maxItn) {
+        itnChangeOfUser = maxItn - itnUser;
+      } else if (userWon && itnUser - itnChangeOfUser < minItn) {
+        itnChangeOfUser = itnUser - minItn;
+      }
+
       notifyListeners();
       return true;
     }
@@ -80,10 +88,22 @@ class MyAppState extends ChangeNotifier {
       var userDoubleItn = (itnUser + itnPartner) / 2;
       var opponentDoubleItn = (itnOpponent1 + itnOpponent2) / 2;
 
+      // 1.000
+      // - 0.010
+      // 1.000
+
       var x = userWon
           ? opponentDoubleItn - userDoubleItn
           : userDoubleItn - opponentDoubleItn;
       itnChangeOfUser = (0.250 / (1.000 + 2.595 * exp(3.500 * x))) * 0.25;
+
+      // TODO: Simplify
+      if (!userWon && itnUser + itnChangeOfUser > maxItn) {
+        itnChangeOfUser = maxItn - itnUser;
+      } else if (userWon && itnUser - itnChangeOfUser < minItn) {
+        itnChangeOfUser = itnUser - minItn;
+      }
+
       notifyListeners();
       return true;
     }
