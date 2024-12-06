@@ -88,10 +88,6 @@ class MyAppState extends ChangeNotifier {
       var userDoubleItn = (itnUser + itnPartner) / 2;
       var opponentDoubleItn = (itnOpponent1 + itnOpponent2) / 2;
 
-      // 1.000
-      // - 0.010
-      // 1.000
-
       var x = userWon
           ? opponentDoubleItn - userDoubleItn
           : userDoubleItn - opponentDoubleItn;
@@ -386,7 +382,8 @@ class NumericalRangeFormatter extends TextInputFormatter {
     TextEditingValue oldValue,
     TextEditingValue newValue,
   ) {
-    if (RegExp(r'^\d\.\d\d\d\d$').hasMatch(newValue.text)) {
+    if (RegExp(r'^\d\.\d\d\d\d$').hasMatch(newValue.text) ||
+        RegExp(r'^\.').hasMatch(newValue.text)) {
       return oldValue;
     } else if (newValue.text == '') {
       return newValue;
