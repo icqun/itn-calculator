@@ -1,0 +1,32 @@
+name: deploy flutter app to github pages
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'itn_calculator_flutter_app/**'
+      - '.github/workflows/**.yaml'
+permissions:
+  contents: write
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+      - name: set up flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version-file: 'itn_calculator_flutter_app/pubspec.yaml'
+          cache: true
+      - name: install flutter dependencies
+        working-directory: itn_calculator_flutter_app
+        run: flutter pub get
+      - name: build flutter webpage
+        working-directory: itn_calculator_flutter_app
+        run: flutter build web --base-href "/itn-calculator/" --release
+      - name: deploy flutter app
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: itn_calculator_flutter_app/build/web/
