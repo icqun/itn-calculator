@@ -208,6 +208,21 @@ class ITNCalculatorPage extends StatefulWidget {
 }
 
 class _ITNCalculatorPageState extends State<ITNCalculatorPage> {
+  final TextEditingController itnUserController = TextEditingController();
+  final TextEditingController itnPartnerController = TextEditingController();
+  final TextEditingController itnOpponent1Controller = TextEditingController();
+  final TextEditingController itnOpponent2Controller = TextEditingController();
+
+  @override
+  void dispose() {
+    // Dispose controllers to free resources
+    itnUserController.dispose();
+    itnPartnerController.dispose();
+    itnOpponent1Controller.dispose();
+    itnOpponent2Controller.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
@@ -236,6 +251,19 @@ class _ITNCalculatorPageState extends State<ITNCalculatorPage> {
                         for (int i = 0; i < appState.selectedMode.length; i++) {
                           appState.selectedMode[i] = i == index;
                         }
+
+                        // Clear the TextEditingControllers
+                        itnUserController.clear();
+                        itnPartnerController.clear();
+                        itnOpponent1Controller.clear();
+                        itnOpponent2Controller.clear();
+
+                        // Reset the appState values
+                        appState.itnUser = 0.0;
+                        appState.itnPartner = 0.0;
+                        appState.itnOpponent1 = 0.0;
+                        appState.itnOpponent2 = 0.0;
+                        appState.itnChangeOfUser = double.nan;
 
                         appState
                             .calculateItnChange(appState.selectedSuccess[0]);
@@ -280,46 +308,35 @@ class _ITNCalculatorPageState extends State<ITNCalculatorPage> {
               SizedBox(height: 20),
               Padding(
                 padding: const EdgeInsets.fromLTRB(50, 0, 50, 0),
-                child: getITNTextFormField(
-                    appState,
-                    'Your ITN',
-                    appState.itnUser == 0
-                        ? ''
-                        : appState.itnUser.toStringAsFixed(3),
-                    (value) => appState.itnUser = value),
+                child: getItnTextField(appState, itnUserController,
+                    'Your ITN', (value) => appState.itnUser = value),
               ),
               if (appState.selectedMode[1]) ...[
                 SizedBox(height: 20),
                 Padding(
                     padding: const EdgeInsets.fromLTRB(50, 0, 50, 0),
-                    child: getITNTextFormField(
+                    child: getItnTextField(
                         appState,
+                        itnPartnerController,
                         'ITN of your partner',
-                        appState.itnPartner == 0
-                            ? ''
-                            : appState.itnPartner.toStringAsFixed(3),
                         (value) => appState.itnPartner = value))
               ],
               SizedBox(height: 20),
               Padding(
                   padding: const EdgeInsets.fromLTRB(50, 0, 50, 0),
-                  child: getITNTextFormField(
+                  child: getItnTextField(
                       appState,
+                      itnOpponent1Controller,
                       'ITN of your opponent',
-                      appState.itnOpponent1 == 0
-                          ? ''
-                          : appState.itnOpponent1.toStringAsFixed(3),
                       (value) => appState.itnOpponent1 = value)),
               if (appState.selectedMode[1]) ...[
                 SizedBox(height: 20),
                 Padding(
                     padding: const EdgeInsets.fromLTRB(50, 0, 50, 0),
-                    child: getITNTextFormField(
+                    child: getItnTextField(
                         appState,
+                        itnOpponent2Controller,
                         'ITN of your opponent',
-                        appState.itnOpponent2 == 0
-                            ? ''
-                            : appState.itnOpponent2.toStringAsFixed(3),
                         (value) => appState.itnOpponent2 = value))
               ],
               SizedBox(height: 20),
@@ -340,34 +357,29 @@ class _ITNCalculatorPageState extends State<ITNCalculatorPage> {
     );
   }
 
-  TextFormField getITNTextFormField(MyAppState appState, String label,
-      String initialValue, void Function(double) onChangedCallback) {
-    return TextFormField(
-      decoration: InputDecoration(
-        border: const UnderlineInputBorder(),
-        labelText: label,
-      ),
-      keyboardType: TextInputType.number,
-      inputFormatters: [
-        FilteringTextInputFormatter.allow(RegExp(r'(^\d*\.?\d*)')),
-        LengthLimitingTextInputFormatter(6),
-        NumericalRangeFormatter(min: minItn, max: maxItn)
-      ],
-      autovalidateMode: AutovalidateMode.always,
-      validator: (value) {
-        double itn = double.tryParse(value ?? '') ?? 0;
-        return itn >= minItn && itn <= maxItn || value == ''
-            ? null
-            : 'Invalid value';
-      },
-      onChanged: (value) {
-        setState(() {
-          onChangedCallback(double.tryParse(value) ?? 0.0);
-          appState.calculateItnChange(appState.selectedSuccess[0]);
+  TextField getItnTextField(
+      MyAppState appState,
+      TextEditingController controller,
+      String label,
+      void Function(double) onChangedCallback) {
+    return TextField(
+        controller: controller,
+        decoration: InputDecoration(
+          border: const UnderlineInputBorder(),
+          labelText: label,
+        ),
+        keyboardType: TextInputType.number,
+        inputFormatters: [
+          FilteringTextInputFormatter.allow(RegExp(r'(^\d*\.?\d*)')),
+          LengthLimitingTextInputFormatter(6),
+          NumericalRangeFormatter(min: minItn, max: maxItn)
+        ],
+        onChanged: (value) {
+          setState(() {
+            onChangedCallback(double.tryParse(value) ?? 0.0);
+            appState.calculateItnChange(appState.selectedSuccess[0]);
+          });
         });
-      },
-      initialValue: initialValue,
-    );
   }
 }
 
