@@ -1,0 +1,34 @@
+name: update README formula images
+on:
+  push:
+    paths:
+      - 'formulas/**.amath'
+      - '.github/workflows/'
+jobs:
+  update-formulas:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 23
+          cache: 'npm'
+          cache-dependency-path: cicd/mathjax-convert/package.json
+      - name: install dependencies
+        working-directory: cicd/mathjax-convert
+        run: |
+          npm i
+      - name: convert images
+        run: |
+          node cicd/mathjax-convert/mathjax-convert.js formulas/itn-singles.amath img/itn-singles-formula.svg
+          node cicd/mathjax-convert/mathjax-convert.js formulas/itn-players-diff.amath img/itn-players-diff-formula.svg
+          node cicd/mathjax-convert/mathjax-convert.js formulas/itn-doubles.amath img/itn-doubles-formula.svg
+      - name: commit new images
+        run: |
+          git config --global user.name 'Austromo'
+          git config --global user.email 'Austromo@users.noreply.github.com'
+          git add img/
+          git commit -m "[bot] automated formula conversion"
+          git push
