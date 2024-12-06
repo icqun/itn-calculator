@@ -190,6 +190,7 @@ class WelcomeHomePage extends StatelessWidget {
                     padding: const EdgeInsets.all(20),
                     child: Text(
                       'Welcome to ITN Calculator',
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.black,
                         fontSize: 30.0,
@@ -308,8 +309,8 @@ class _ITNCalculatorPageState extends State<ITNCalculatorPage> {
               SizedBox(height: 20),
               Padding(
                 padding: const EdgeInsets.fromLTRB(50, 0, 50, 0),
-                child: getItnTextField(appState, itnUserController,
-                    'Your ITN', (value) => appState.itnUser = value),
+                child: getItnTextField(appState, itnUserController, 'Your ITN',
+                    (value) => appState.itnUser = value),
               ),
               if (appState.selectedMode[1]) ...[
                 SizedBox(height: 20),
